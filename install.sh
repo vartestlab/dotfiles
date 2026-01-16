@@ -122,6 +122,20 @@ for arg in "$@"; do
 	    addEndInstruction "Выполните команду source ~/.zshrc"
             ;;
 
+	# Если это строка приглашения для bash - 
+        $NAME_PROMPT_BASH)
+	    # Вывод
+	    print "[$NAME_PROMPT_BASH] ... "
+            # Убеждаемся, что файл ~/.bashrc будет существовать
+            touch "$HOME/.bashrc"
+	    # Добавляем активацию строки приглашения в ~/.bashrc
+            writeLineInBackFile "source \"$PROJECT_DIR/bashrc/prompt.sh\"" "$HOME/.bashrc"
+	    # Вывод результата
+            println "✅ OK" "$GREEN"
+	    # Добавление инскрукции по активации
+	    addEndInstruction "Выполните команду source ~/.bashrc"
+            ;;
+
         # Здесь в будущем можно будет добавить другие компоненты
         # zsh-aliases)
         #     echo "Устанавливаем Zsh Aliases..."
