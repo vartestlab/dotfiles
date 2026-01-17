@@ -67,6 +67,26 @@ println() {
     echo ""
 }
 
+# Записать текст в конец файла (Записывает как одну строку так и несколько с переносом строк). Испольвзаоение: writeTextInBackFile "text" "file"
+writeTextInBackFile() {
+    # Локальные переменные
+    local text="$1"
+    local file="$2"
+    # Читаем все содержимое файла в переменную
+    local fileText=$(<"$file")
+    # Если содержимое файла не содержит наш блок текста -
+    if [[ "$fileText" != *"$text"* ]]; then
+	# Записываем текст с конце файла (со всеми переносами строк)
+        echo -e "$text" >> "$file"
+        # Отладка
+        #echo "	- Блок успешно добавлен в $file"
+    else
+        # Отладка
+        #echo "	- Блок уже существует в $file"
+	print ""
+    fi
+}
+
 # Записать строку в конец файла. Использование: writeLineInBackFile "line" "file"
 writeLineInBackFile() {
     # Локальные перменные 
@@ -77,10 +97,10 @@ writeLineInBackFile() {
 	# Записываем строку в файл
         echo "$line" >> "$file"
 	# Отладка
-        #echo "	- Добавляем строку $line в $file"
+        echo "	- Добавляем строку $line в $file"
     else
 	# Отладка
-        #echo "	- Строка $line уже записана в $file"
+        echo "	- Строка $line уже записана в $file"
 	print ""
     fi
 }
@@ -114,8 +134,11 @@ for arg in "$@"; do
 	    print "[$NAME_PROMPT_ZSH] ... "
             # Убеждаемся, что файл ~/.zshrc будет существовать
             touch "$HOME/.zshrc"
+	    # Подготавливаем строку, которую будем добавлять в ~/.zshrc
+	    txt=$'\n# Настройка строки приглашения\n'
+	    txt+=$"source \"$PROJECT_DIR/zshrc/prompt.zsh\"" 
 	    # Добавляем активацию строки приглашения в ~/.zshrc
-            writeLineInBackFile "source \"$PROJECT_DIR/zshrc/prompt.zsh\"" "$HOME/.zshrc"
+            writeTextInBackFile "$txt" "$HOME/.zshrc"
 	    # Вывод результата
             println "✅ OK" "$GREEN"
 	    # Добавление инскрукции по активации
@@ -128,8 +151,11 @@ for arg in "$@"; do
 	    print "[$NAME_PROMPT_BASH] ... "
             # Убеждаемся, что файл ~/.bashrc будет существовать
             touch "$HOME/.bashrc"
+	    # Подготавливаем строку, которую будем добавлять в ~/.bashrc
+	    txt=$'\n# Настройка строки приглашения\n'
+	    txt+=$"source \"$PROJECT_DIR/bashrc/prompt.sh\"" 
 	    # Добавляем активацию строки приглашения в ~/.bashrc
-            writeLineInBackFile "source \"$PROJECT_DIR/bashrc/prompt.sh\"" "$HOME/.bashrc"
+            writeTextInBackFile "$txt" "$HOME/.bashrc"
 	    # Вывод результата
             println "✅ OK" "$GREEN"
 	    # Добавление инскрукции по активации
