@@ -76,7 +76,7 @@ writeTextInBackFile() {
     local fileText=$(<"$file")
     # Если содержимое файла не содержит наш блок текста -
     if [[ "$fileText" != *"$text"* ]]; then
-	# Записываем текст с конце файла (со всеми переносами строк)
+		# Записываем текст с конце файла (со всеми переносами строк)
         echo -e "$text" >> "$file"
         # Отладка
         #echo "	- Блок успешно добавлен в $file"
@@ -94,12 +94,12 @@ writeLineInBackFile() {
     local file="$2"	# Файл		
     # Если в файле еще нет этой строки 
     if ! grep -Fxq "$line" "$file"; then
-	# Записываем строку в файл
+		# Записываем строку в файл
         echo "$line" >> "$file"
-	# Отладка
+		# Отладка
         echo "	- Добавляем строку $line в $file"
     else
-	# Отладка
+		# Отладка
         echo "	- Строка $line уже записана в $file"
 	print ""
     fi
@@ -128,38 +128,50 @@ echo ""
 for arg in "$@"; do
     case $arg in
 
-	# Если это строка приглашения для zsh - 
+		# Если это строка приглашения для zsh - 
         $NAME_PROMPT_ZSH)
-	    # Вывод
-	    print "[$NAME_PROMPT_ZSH] ... "
+	    	# Вывод
+	    	print "[$NAME_PROMPT_ZSH] ... "
             # Убеждаемся, что файл ~/.zshrc будет существовать
             touch "$HOME/.zshrc"
-	    # Подготавливаем строку, которую будем добавлять в ~/.zshrc
-	    txt=$'\n# Настройка строки приглашения\n'
-	    txt+=$"source \"$PROJECT_DIR/zshrc/prompt.zsh\"" 
-	    # Добавляем активацию строки приглашения в ~/.zshrc
+	    	# Подготавливаем строку, которую будем добавлять в ~/.zshrc
+	    	txt=$'\n# Настройка строки приглашения\n'
+	    	txt+=$"source \"$PROJECT_DIR/zshrc/prompt.zsh\"" 
+	    	# Добавляем активацию строки приглашения в ~/.zshrc
             writeTextInBackFile "$txt" "$HOME/.zshrc"
-	    # Вывод результата
+	    	# Вывод результата
             println "✅ OK" "$GREEN"
-	    # Добавление инскрукции по активации
-	    addEndInstruction "Выполните команду source ~/.zshrc"
+	    	# Добавление инскрукции по активации
+	    	addEndInstruction "Выполните команду source ~/.zshrc"
             ;;
 
-	# Если это строка приглашения для bash - 
+		# Если это строка приглашения для bash - 
         $NAME_PROMPT_BASH)
-	    # Вывод
-	    print "[$NAME_PROMPT_BASH] ... "
+	    	# Вывод
+	    	print "[$NAME_PROMPT_BASH] ... "
             # Убеждаемся, что файл ~/.bashrc будет существовать
             touch "$HOME/.bashrc"
-	    # Подготавливаем строку, которую будем добавлять в ~/.bashrc
-	    txt=$'\n# Настройка строки приглашения\n'
-	    txt+=$"source \"$PROJECT_DIR/bashrc/prompt.sh\"" 
-	    # Добавляем активацию строки приглашения в ~/.bashrc
+	    	# Подготавливаем строку, которую будем добавлять в ~/.bashrc
+	    	txt=$'\n# Настройка строки приглашения\n'
+	    	txt+=$"source \"$PROJECT_DIR/bashrc/prompt.sh\"" 
+	    	# Добавляем активацию строки приглашения в ~/.bashrc
             writeTextInBackFile "$txt" "$HOME/.bashrc"
-	    # Вывод результата
+	    	# Вывод результата
             println "✅ OK" "$GREEN"
-	    # Добавление инскрукции по активации
-	    addEndInstruction "Выполните команду source ~/.bashrc"
+	    	# Добавление инскрукции по активации
+	    	addEndInstruction "Выполните команду source ~/.bashrc"
+            ;;
+
+		# Если это конфигурация для Neovim
+        $NAME_CONFIG_NVIM)
+            # Вывод
+            print "[$NAME_CONFIG_NVIM] ... "
+            # Убеждаемся, что директория ~/.config/nvim существует
+            mkdir -p "$HOME/.config/nvim"
+            # Создаем симлинк (флаг -s для симлинка, -f для перезаписи если файл уже есть)
+            ln -sf "$PROJECT_DIR/nvim/init.lua" "$HOME/.config/nvim/init.lua"
+            # Вывод результата
+            println "✅ OK" "$GREEN"
             ;;
 
         # Здесь в будущем можно будет добавить другие компоненты
