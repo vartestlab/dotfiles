@@ -161,27 +161,47 @@ require('lazy').setup({
     end,
   },
 
-  -- 2. Идеальный фолдинг (nvim-ufo)
+-- 2. Идеальный фолдинг (nvim-ufo)
   {
     "kevinhwang91/nvim-ufo",
     dependencies = "kevinhwang91/promise-async",
-    event = "BufRead",
+    event = "BufReadPost", -- Загружаем, когда открывается любой файл
     config = function()
-      -- Настройки nvim для фолдинга (без них ничего не заработает)
-      vim.o.foldcolumn = '1' -- полоска слева
-      vim.o.foldlevel = 99
+      -- 1. Системные настройки: разрешаем всё открытое (чтобы не схлопывалось само при печати)
+      vim.o.foldcolumn = '1'
+      vim.o.foldlevel = 99 
       vim.o.foldlevelstart = 99
       vim.o.foldenable = true
 
-      -- Горячие клавиши: zR - открыть всё, zM - закрыть всё
+      -- 2. Настройка самого плагина
+      require('ufo').setup({
+        provider_selector = function(bufnr, filetype, buftype)
+          return {'treesitter', 'indent'}
+        end
+      })
+
+      -- 3. Хоткеи
       vim.keymap.set('n', 'zR', require('ufo').openAllFolds)
       vim.keymap.set('n', 'zM', require('ufo').closeAllFolds)
 
-      require('ufo').setup({
-        provider_selector = function(bufnr, filetype, buftype)
-          -- Используем treesitter для понимания структуры кода
-          return {'treesitter', 'indent'}
-        end
+      -- 4. ГЛАВНОЕ: Функция для сворачивания
+      local function close_all_on_open()
+        -- Даем небольшую паузу, чтобы Treesitter успел построить дерево 
+        -- (особенно важно для тяжелых файлов на Python)
+        vim.defer_fn(function()
+          require('ufo').closeAllFolds()
+        end, 100) -- 100мс достаточно для M4
+      end
+
+      -- Применяем для текущего (самого первого) файла, который открыл nvim
+      close_all_on_open()
+
+      -- Создаем правило для всех последующих файлов, которые ты откроешь внутри nvim
+      vim.api.nvim_create_autocmd("BufReadPost", {
+        group = vim.api.nvim_create_augroup("UfoCloseOnOpen", { clear = true }),
+        callback = function()
+          close_all_on_open()
+        end,
       })
     end
   },
