@@ -29,24 +29,13 @@ vim.opt.tabstop = 4         		-- Отображать 1 таб как 4 проб
 vim.opt.shiftwidth = 4      		-- Автоматический отступ в 1 таб
 vim.opt.expandtab = false   		-- Вставлять реальный таб
 
-vim.opt.foldmethod = "indent"		-- Настройка автоматического сворачивания блоков кода
-vim.opt.foldlevel = 99 				-- При открытии файла всё развернуто
 
     
--- === НАСТРОЙКИ СВОРАЧИВАНИЯ (FOLDING) ===
-vim.o.foldcolumn = '1' 		-- Показать колонку слева
-vim.o.foldlevel = 99   		-- При открытии файла ВСЁ свернуто (уровень 0)
-vim.o.foldlevelstart = 0	-- Начинать редактирование со свернутыми блоками
-vim.o.foldenable = true
 
--- ВАЖНАЯ НАСТРОЙКА ДЛЯ ТЕБЯ:
--- Ограничиваем глубину вложенности складок до 1.
--- Это значит: Функции/Классы (1 уровень) будут сворачиваться.
--- А if/else/циклы внутри них (2+ уровень) сворачиваться НЕ будут.
--- Когда ты откроешь функцию, код внутри будет сразу развернут.
-vim.o.foldnestmax = 1
 
-  
+
+
+
 
 
 
@@ -149,39 +138,81 @@ require('lazy').setup({
   		end,
 	},
 
-	-- === 1. TREESITTER (Мозг для подсветки и структуры кода) ===
-    {
-        "nvim-treesitter/nvim-treesitter",
-        build = ":TSUpdate",
-        config = function() 
-            require("nvim-treesitter.configs").setup({
-                -- Автоматически установить парсеры для этих языков
-                ensure_installed = { "c", "lua", "vim", "vimdoc", "query", "python", "json", "bash" },
-                auto_install = true,
-                highlight = { enable = true }, -- Включить лучшую подсветку
-                indent = { enable = true },    -- Включить лучший отступ
-            })
-        end
-    },
+	-- 1. Исправленный Treesitter
+  {
+    "nvim-treesitter/nvim-treesitter",
+    version = false, -- берем последнюю версию из master
+    build = ":TSUpdate",
+    event = { "BufReadPost", "BufNewFile" },
+    lazy = vim.fn.argc(-1) == 0, -- не грузим, если открываем пустой nvim
+    config = function()
+      -- Использование pcall здесь поможет нам увидеть, если путь всё ещё битый
+      local ok, ts = pcall(require, "nvim-treesitter.configs")
+      if not ok then
+          return -- если не нашел модуль, просто выходим без краша
+      end
 
-    -- === 2. NVIM-UFO (Профессиональный фолдинг) ===
-    {
-        'kevinhwang91/nvim-ufo',
-        dependencies = { 'kevinhwang91/promise-async' },
-        config = function()
-            -- Горячие клавиши для управления
-            vim.keymap.set('n', 'zR', require('ufo').openAllFolds) -- Развернуть всё
-            vim.keymap.set('n', 'zM', require('ufo').closeAllFolds) -- Свернуть всё
-            
-            require('ufo').setup({
-                provider_selector = function(bufnr, filetype, buftype)
-                    -- Использовать Treesitter как главный источник, indent как запасной
-                    return {'treesitter', 'indent'}
-                end
-            })
+      ts.setup({
+        -- Явно указываем нужные парсеры
+        ensure_installed = { "python", "lua", "vim", "vimdoc", "markdown", "markdown_inline" },
+        highlight = { enable = true },
+        indent = { enable = true },
+      })
+    end,
+  },
+
+  -- 2. Идеальный фолдинг (nvim-ufo)
+  {
+    "kevinhwang91/nvim-ufo",
+    dependencies = "kevinhwang91/promise-async",
+    event = "BufRead",
+    config = function()
+      -- Настройки nvim для фолдинга (без них ничего не заработает)
+      vim.o.foldcolumn = '1' -- полоска слева
+      vim.o.foldlevel = 99
+      vim.o.foldlevelstart = 99
+      vim.o.foldenable = true
+
+      -- Горячие клавиши: zR - открыть всё, zM - закрыть всё
+      vim.keymap.set('n', 'zR', require('ufo').openAllFolds)
+      vim.keymap.set('n', 'zM', require('ufo').closeAllFolds)
+
+      require('ufo').setup({
+        provider_selector = function(bufnr, filetype, buftype)
+          -- Используем treesitter для понимания структуры кода
+          return {'treesitter', 'indent'}
         end
-    },
+      })
+    end
+  },
+
 }) 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
